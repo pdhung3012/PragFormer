@@ -106,6 +106,13 @@ def generateExcelFile(fpInputJson,fopOutputCsv):
 
     return data,dataFull
 
+fopInputDataset='/home/hungphd/git/Open_OMP/'
+fopOutputFolder='/home/hungphd/git/Open_OMP/repResult/'
+fopDatabaseCodeLocation=fopInputDataset+'database/'
+fpJsonDatabase=fopInputDataset+'database.json'
+createDirIfNotExist(fopOutputFolder)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--config_file', default=None, type=str,
                     dest='config_file', help='The file of the hyper parameters.')
@@ -117,7 +124,7 @@ parser.add_argument('--save', default="", type = str,
                     dest='save', help='Save tokenize phase.')
 parser.add_argument('--multiple_gpu', default=False, action = "store_true",
                     dest='multiple_gpu', help='Number of gpus')
-parser.add_argument('--out', default="saved_weights.pt", type=str,
+parser.add_argument('--out', default=fopOutputFolder+"/saved_weights.pt", type=str,
                     dest='out', help='Saved model name.')
 
 # ***********  Params for data.  **********
@@ -133,11 +140,6 @@ parser.add_argument('--reshuffle', dest='reshuffle',action = "store_true", defau
 
 args = parser.parse_args()
 
-fopInputDataset='/home/hungphd/git/Open_OMP/'
-fopOutputFolder='/home/hungphd/git/Open_OMP/repResult/'
-fopDatabaseCodeLocation=fopInputDataset+'database/'
-fpJsonDatabase=fopInputDataset+'database.json'
-createDirIfNotExist(fopOutputFolder)
 
 data,dataFull=generateExcelFile(fpJsonDatabase,fopOutputFolder)
 fpOutputParallel=fopOutputFolder+'parallel.csv'
@@ -212,7 +214,7 @@ weights = weights.to(device)
 # define the loss function
 cross_entropy = nn.NLLLoss(weight=weights)
 
-epochs = 1
+epochs = 15
 # print("Summary:")
 # print("Train:", len(train[0]))
 # print("Valid:", len(val[0]))
