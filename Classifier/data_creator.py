@@ -596,7 +596,7 @@ def statistics2(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type', default=None, type=str,
+    parser.add_argument('--type', default='as_ast_normalized', type=str,
                         dest='create_type', help='The file of the hyper parameters.')
     parser.add_argument('--save', default=None, type=str,
                         dest='save', help='Train phase.')
@@ -612,7 +612,7 @@ if __name__ == "__main__":
     print(args)
     config = {}
     config['data_type'] = args.create_type
-    config["data_dir"] = "/home/reemh/LIGHTBITS/DB/"
+    config["data_dir"] = "/home/hungphd/media/dataPapersExternal/mixCodeRaw/repPackages/GNN-Parallel/Open_OMP//"
     config['save'] = args.save
     config['max_ast'] = args.max_ast
     config["clause"] = args.clause

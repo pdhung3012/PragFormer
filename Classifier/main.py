@@ -122,7 +122,7 @@ if __name__ == "__main__":
                         dest='out', help='Saved model name.')
 
     # ***********  Params for data.  **********
-    parser.add_argument('--data_dir', default="/home/reemh/LIGHTBITS/DB/", type=str,
+    parser.add_argument('--data_dir', default="/home/hungphd/media/dataPapersExternal/mixCodeRaw/repPackages/GNN-Parallel/Open_OMP/", type=str,
                         dest='data_dir', help='The Directory of the data.')
     parser.add_argument('--data_type', default="", type=str,
                         dest='data_type', help='The type of read.')
@@ -182,6 +182,7 @@ if __name__ == "__main__":
         val_seq = torch.tensor(val['input_ids'])
         val_mask = torch.tensor(val['attention_mask'])
         val_y = torch.tensor(data.val_labels)
+        print(val_seq)
         # wrap tensors
         val_data = TensorDataset(val_seq, val_mask, val_y)
         # sampler for sampling the data during training
