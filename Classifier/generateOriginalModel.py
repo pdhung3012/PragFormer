@@ -25,6 +25,7 @@ from Classifier.tokenizer import *
 from UtilFunctions import *
 import ast
 from sklearn.model_selection import train_test_split
+from statistics import mean,median
 
 class Object(object):
     pass
@@ -40,6 +41,7 @@ def generateExcelFile(fpInputJson,fopOutputCsv):
     yDsPrivate = []
     XDsReduction = []
     yDsReduction = []
+    lstTokenSize=[]
     for key in jsonInput.keys():
         itemJson = jsonInput[key]
         arrFpItemCode=itemJson['code'].strip().split('/')
@@ -52,6 +54,7 @@ def generateExcelFile(fpInputJson,fopOutputCsv):
         f1=open(fpItemCode,'r')
         strCode=f1.read().strip()
         f1.close()
+        lstTokenSize.append(len(strCode.split()))
         if os.path.isfile(fpItemPragma):
             yItem=1
             f1=open(fpItemPragma,'r')
@@ -75,11 +78,20 @@ def generateExcelFile(fpInputJson,fopOutputCsv):
         XDsParallel.append(tupPar)
         yDsParallel.append(yItem)
 
+    maxTokenSize=max(lstTokenSize)
+    indexTokenSize=lstTokenSize.index(maxTokenSize)
+    ele=XDsParallel[indexTokenSize]
+
+    print('max of code length \n{}\n{}\n{}'.format(indexTokenSize,maxTokenSize,ele[3]))
+    lstSortTokenSize=sorted(lstTokenSize)
+    lstSortTokenSizeReverse=sorted(lstTokenSize,reverse=True)
+    # print('mean {} median {} min {} max {}'.format(mean(lstSortTokenSize),median(lstSortTokenSize),min(lstSortTokenSize),max(lstSortTokenSize)))
+    # print('top 100 \n{}'.format('\n'.join(map(str,lstSortTokenSizeReverse[:100]))))
+    # input('aa ')
     X_train, X_test, y_train, y_test = train_test_split(XDsParallel, yDsParallel,
                                                         test_size=0.125, shuffle=True)
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,
                                                         test_size=0.125, shuffle=True)
-
     fpParallel=fopOutputCsv+'directive.csv'
     # df = pd.DataFrame()
     train=[i[1] for i in X_train]
@@ -132,10 +144,10 @@ parser.add_argument('--data_dir', default="/home/hungphd/git/Open_OMP/", type=st
                     dest='data_dir', help='The Directory of the data.')
 parser.add_argument('--data_type', default="", type=str,
                     dest='data_type', help='The type of read.')
-parser.add_argument('--max_len', default=50, type=int,
+parser.add_argument('--max_len', default=256, type=int,
                     dest='max_len', help='The type of read.')
-parser.add_argument('--specific_directive', default="reduction", type=str,
-                    dest='max_len', help='The type of read.')
+# parser.add_argument('--specific_directive', default="reduction", type=str,
+#                     dest='max_len', help='The type of read.')
 parser.add_argument('--reshuffle', dest='reshuffle',action = "store_true", default=False)
 
 args = parser.parse_args()
@@ -146,13 +158,13 @@ fpOutputParallel=fopOutputFolder+'parallel.csv'
 # data=pd.read_csv(fpOutputParallel)
 
 model_pretained_name='NTUYG/DeepSCC-RoBERTa'
-batch_size=64
+batch_size=32
 torch.cuda.empty_cache()
 # print(torch)
 device = torch.device("cuda")
 model_pretained_name = "NTUYG/DeepSCC-RoBERTa" #'bert-base-uncased'
 # model_pretained_name = 'bert-base-uncased'
-pt_model = AutoModel.from_pretrained(model_pretained_name)
+pt_model = AutoModel.from_pretrained(model_pretained_name,cache_dir=fopOutputFolder+'cached_Roberta/')
 model = BERT_Arch(pt_model)
 # define the optimizer
 model = model.to(device)
@@ -160,13 +172,13 @@ optimizer = AdamW(model.parameters(), lr=1e-5)
 
 # train_ds=['a']
 # print("Example of data: \n", data.train[126])
-train, train_size = deepscc_tokenizer(data.train, args.max_len, model_pretained_name)
-val, _ = deepscc_tokenizer(data.val, args.max_len, model_pretained_name)
+train, train_size = deepscc_tokenizer(data.train, args.max_len, model_pretained_name,fopOutputFolder+'cached_Roberta/')
+val, _ = deepscc_tokenizer(data.val, args.max_len, model_pretained_name,fopOutputFolder+'cached_Roberta/')
 train_seq = torch.tensor(train['input_ids'])
 train_mask = torch.tensor(train['attention_mask'])
 train_y = torch.tensor(data.train_labels)
 indexFirst=0
-print('{}\t{}\t{}\n{}\t{}\n{}\t{}\n{}\t{}'.format(train_size,dataFull.train[0][3],dataFull.train[0][2],len(data.train[0].split()),data.train[0],len(train['input_ids'][0]),train['input_ids'][0],len(train['attention_mask'][0]),train['attention_mask'][0]))
+# print('{}\t{}\t{}\n{}\t{}\n{}\t{}\n{}\t{}'.format(train_size,dataFull.train[0][3],dataFull.train[0][2],len(data.train[0].split()),data.train[0],len(train['input_ids'][0]),train['input_ids'][0],len(train['attention_mask'][0]),train['attention_mask'][0]))
 # input('train ')
 # wrap tensors
 train_data = TensorDataset(train_seq, train_mask, train_y)
@@ -192,7 +204,7 @@ val_dataloader = DataLoader(val_data, sampler = val_sampler, batch_size = batch_
 # prediction model
 data_test = data.test
 label_test = data.test_labels
-test, _ = deepscc_tokenizer(data_test, args.max_len, model_pretained_name)
+test, _ = deepscc_tokenizer(data_test, args.max_len, model_pretained_name,fopOutputFolder+'cached_Roberta/')
 maxx = len(test['input_ids'])
 test_seq = torch.tensor(test['input_ids'])
 test_mask = torch.tensor(test['attention_mask'])
