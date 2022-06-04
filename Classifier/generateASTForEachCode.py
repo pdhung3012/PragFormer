@@ -26,8 +26,12 @@ from UtilFunctions import *
 import ast
 from sklearn.model_selection import train_test_split
 from statistics import mean,median
+from tree_sitter import Language, Parser
 
-
+fopData='/home/hungphd/'
+fopGithub='/home/hungphd/git/'
+fopBuildFolder=fopData+'build-tree-sitter/'
+fpLanguageSo=fopBuildFolder+'my-languages.so'
 fopInputDataset='/home/hungphd/git/Open_OMP/'
 # fopOutputPickle='/home/hungphd/git/Open_OMP/pickle/'
 fopDatabaseCodeLocation=fopInputDataset+'database/'
@@ -35,6 +39,10 @@ fpJsonDatabase=fopInputDataset+'database.json'
 fpLogCCodeParseStatus=fopInputDataset+'log_asttreesitter.txt'
 # createDirIfNotExist(fopOutputPickle)
 from ForPragmaExtractor.global_parameters import PragmaForTuple
+from LibForHandleASTTreeSitter import *
+CPP_LANGUAGE = Language(fpLanguageSo, 'cpp')
+parser = Parser()
+parser.set_language(CPP_LANGUAGE)
 
 f1 = open(fpJsonDatabase, 'r')
 strInputJson = f1.read().strip()
@@ -45,6 +53,9 @@ lstStrJsonParseResults=[]
 f1=open(fpLogCCodeParseStatus,'w')
 f1.write('')
 f1.close()
+
+
+
 for key in jsonInput.keys():
     index=index+1
     itemJson = jsonInput[key]
@@ -53,12 +64,15 @@ for key in jsonInput.keys():
     fnCodeFile = arrFpItemCode[len(arrFpItemCode) - 2]
     arrFpOriginal=itemJson['original'].strip().split('/')
     fnNameOfPureCodeFile=arrFpOriginal[len(arrFpOriginal)-1].split('.c:')[0]+'.c'
-    # if fnNameOfPureCodeFile=='code.c':
-    #     print(fnCodeFile+' issue here')
+    if fnNameOfPureCodeFile=='code.c' or fnNameOfPureCodeFile=='pragma.c':
+        print(fnCodeFile+' issue here')
+    continue
     fpItemPureCode=fopItemCode+fnNameOfPureCodeFile
+    fpItemASTPureCode = fopItemCode + fnNameOfPureCodeFile.replace('.c','.ast.txt')
 
 
     fpItemForLoop = fopItemCode + 'code.c'
+    fpItemASTForLoop = fopItemCode + 'code.ast.txt'
     fpItemPragma = fopItemCode + 'pragma.c'
     fpItemPickle = fopItemCode + 'code_pickle.pkl'
     f1 = open(fpItemForLoop, 'r')
@@ -69,8 +83,37 @@ for key in jsonInput.keys():
     f1.close()
     isParseForLoopOK=False
     isParseAllCodeOK = False
-    lstStrJsonParseResults.append('{}\t{}\t{}'.format(fnCodeFile,isParseForLoopOK,isParseAllCodeOK))
-    if len(lstStrJsonParseResults)%1000==0 or len(lstStrJsonParseResults)==len(jsonInput.keys()):
+    try:
+        tree = parser.parse(bytes(strForLoop, 'utf8'))
+        cursor = tree.walk()
+        node = cursor.node
+        arrForLoop=strForLoop.split()
+        listId=[]
+        dictJson = walkTreeAndReturnJSonObject(node, arrForLoop,listId)
+        f1 = open(fpItemASTForLoop, 'w')
+        f1.write(str(dictJson))
+        f1.close()
+        isParseForLoopOK=True
+    except:
+        traceback.print_exc()
+        pass
+    try:
+        tree = parser.parse(bytes(strPureCode, 'utf8'))
+        cursor = tree.walk()
+        node = cursor.node
+        arrPureCode=strPureCode.split()
+        listId=[]
+        dictJson = walkTreeAndReturnJSonObject(node, arrPureCode,listId)
+        f1 = open(fpItemASTPureCode, 'w')
+        f1.write(str(dictJson))
+        f1.close()
+        isParseAllCodeOK=True
+    except:
+        traceback.print_exc()
+        pass
+    lstStrJsonParseResults.append('{}\t{}\t{}'.format(fnCodeFile, isParseForLoopOK, isParseAllCodeOK))
+
+    if len(lstStrJsonParseResults)%100==0 or len(lstStrJsonParseResults)==len(jsonInput.keys()):
         f1=open(fpLogCCodeParseStatus,'a')
         f1.write('\n'.join(lstStrJsonParseResults)+'\n')
         f1.close()
