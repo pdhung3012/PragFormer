@@ -1,3 +1,4 @@
+import copy
 import os.path
 import sys
 sys.path.append("..")
@@ -39,7 +40,7 @@ def splitDataBySetIndex(arr,indexes):
     lstOut=[]
     for i in range(0,len(arr)):
         if i in indexes:
-            lstOut.append(arr[i])
+            lstOut.append(copy.copy(arr[i]))
     return lstOut
 
 def generateExcelFile3Problems10Folds(fpInputJson,fopOutputCsv):
@@ -162,25 +163,33 @@ def generateExcelFile3Problems10Folds(fpInputJson,fopOutputCsv):
 
     kf = KFold(n_splits=10,random_state=8,shuffle=True)  # Define the split - into 2 folds
     kf.get_n_splits(XDsPrivate)
-    indexFold=1
+    indexFold=0
     for train_indexes,test_indexes in kf.split(XDsPrivate):
         indexFold+=1
-        X_train, X_test = splitDataBySetIndex(XDsPrivate,train_indexes), splitDataBySetIndex(XDsPrivate,test_indexes)
-        y_train, y_test = splitDataBySetIndex(yDsPrivate,train_indexes), splitDataBySetIndex(yDsPrivate,test_indexes)
+        X_train=splitDataBySetIndex(XDsPrivate,train_indexes)
+        X_test = splitDataBySetIndex(XDsPrivate,test_indexes)
+        y_train = splitDataBySetIndex(yDsPrivate,train_indexes)
+        y_test=splitDataBySetIndex(yDsPrivate,test_indexes)
         X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,
                                                           test_size=0.1, shuffle=True)
         # X_train, X_test, y_train, y_test = train_test_split(XDsParallel, yDsParallel,
         #                                                     test_size=0.125, shuffle=True)
         # X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,
         #                                                     test_size=0.125, shuffle=True)
+
+        # print('len {}'.format(len(X_train[0])))
+        # input('aaaa ')
         for i in range(0,len(X_train)):
             X_train[i].append('train')
         for i in range(0,len(X_val)):
             X_val[i].append('val')
         for i in range(0,len(X_test)):
             X_test[i].append('test')
+
         X_final=X_train+X_val+X_test
         X_final.insert(0,['lenInput','code','label','id'])
+        # print('X_train {}'.format(X_final))
+        # input('aaa')
         subFolderName='private/fold-{}/'.format(indexFold)
         createDirIfNotExist(fopOutputCsv+subFolderName)
         fpParallel=fopOutputCsv+subFolderName+'data.csv'
@@ -188,6 +197,7 @@ def generateExcelFile3Problems10Folds(fpInputJson,fopOutputCsv):
         writer = csv.writer(f1)
         writer.writerows(X_final)
         f1.close()
+        # input('bbbb')
         # df = pd.DataFrame()
         train=[i[1] for i in X_train]
         train_labels=[i[2] for i in X_train]
@@ -214,11 +224,13 @@ def generateExcelFile3Problems10Folds(fpInputJson,fopOutputCsv):
 
     kf = KFold(n_splits=10,random_state=8,shuffle=True)  # Define the split - into 2 folds
     kf.get_n_splits(XDsReduction)
-    indexFold=1
+    indexFold=0
     for train_indexes,test_indexes in kf.split(XDsReduction):
         indexFold+=1
-        X_train, X_test = splitDataBySetIndex(XDsReduction,train_indexes), splitDataBySetIndex(XDsReduction,test_indexes)
-        y_train, y_test = splitDataBySetIndex(yDsReduction,train_indexes), splitDataBySetIndex(yDsReduction,test_indexes)
+        X_train=splitDataBySetIndex(XDsReduction,train_indexes)
+        X_test =splitDataBySetIndex(XDsReduction,test_indexes)
+        y_train = splitDataBySetIndex(yDsReduction,train_indexes)
+        y_test=splitDataBySetIndex(yDsReduction,test_indexes)
         X_train, X_val, y_train, y_val = train_test_split(X_train, y_train,
                                                           test_size=0.1, shuffle=True)
         # X_train, X_test, y_train, y_test = train_test_split(XDsParallel, yDsParallel,
@@ -351,7 +363,7 @@ parser.add_argument('--data_dir', default="/home/hungphd/git/Open_OMP/", type=st
                     dest='data_dir', help='The Directory of the data.')
 parser.add_argument('--data_type', default="", type=str,
                     dest='data_type', help='The type of read.')
-parser.add_argument('--max_len', default=128, type=int,
+parser.add_argument('--max_len', default=64, type=int,
                     dest='max_len', help='The type of read.')
 # parser.add_argument('--specific_directive', default="reduction", type=str,
 #                     dest='max_len', help='The type of read.')
@@ -364,7 +376,7 @@ dictData=generateExcelFile3Problems10Folds(fpJsonDatabase,fopOutputFolder)
 # fpOutputParallel=fopOutputFolder+'parallel.csv'
 # data=pd.read_csv(fpOutputParallel)
 model_pretained_name='NTUYG/DeepSCC-RoBERTa'
-batch_size=128
+batch_size=256
 epochs = 15
 
 for config in dictData.keys():

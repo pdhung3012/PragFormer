@@ -39,7 +39,7 @@ def predict(model, device, test_dataloader, test_y, path, test_to_show):
     result_name = path.split(".pt")[0] + "_full_results.txt"
     with open(result_name, "w") as f:
         for i, v in enumerate(total_ids):
-            f.writelines("id: " + str(total_ids[i]) + ' predicted: ' + str(total_preds[i]) + " real: " + str(test_y[i]) +"\n")
+            f.writelines("" + str(total_ids[i]) + '\t' + str(total_preds[i]) + "\t" + str(test_y[i]) +"\n")
 
 
     # print("PREDS", preds)
