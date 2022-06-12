@@ -26,13 +26,15 @@ createDirIfNotExist(fopResultPragFormer)
 createDirIfNotExist(fopResultAllMLApproaches)
 lstConfigs=['directive','private','reduction']
 strBert='bert'
-
+fpItemOverallStatistics = fopResultAllMLApproaches + 'overallStatistics.xlsx'
+writer = pd.ExcelWriter(fpItemOverallStatistics,
+                            engine='xlsxwriter')
 for config in lstConfigs:
     dictAllPredictions = {}
     dictOracles={}
     fopStatisticsForProblems=fopResultAllMLApproaches+config+'/'
     createDirIfNotExist(fopStatisticsForProblems)
-    fpItemOverallStatistics = fopStatisticsForProblems + 'overallAccuracy.csv'
+
     fpItemOverallPrediction = fopStatisticsForProblems + 'overallPredictions.csv'
     dictAllPredictions[strBert]={}
     for foldIndex in range(1,11):
@@ -102,9 +104,14 @@ for config in lstConfigs:
         lstStrAccuracy.append(strMetric)
         dfAllResults[keyModel]=lstValueColumn
     dfAllResults.to_csv(fpItemOverallPrediction,index=False)
-    f1=open(fpItemOverallStatistics,'w')
+    f1=open(fpItemOverallStatistics.replace('.xlsx','.csv'),'w')
     f1.write('\n'.join(lstStrAccuracy))
     f1.close()
+    pdItemStat=pd.read_csv(fpItemOverallStatistics.replace('.xlsx','.csv'))
+
+    dfAllResults.to_excel(writer, sheet_name='{}'.format(config))
+writer.save()
+
 
 
 

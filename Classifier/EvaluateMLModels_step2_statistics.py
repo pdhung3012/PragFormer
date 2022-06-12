@@ -52,6 +52,7 @@ createDirIfNotExist(fopResultAllMLApproaches)
 lstConfigs=['directive','private','reduction']
 strBert='bert'
 
+writerOut = pd.ExcelWriter(fopResultAllMLApproaches+'overallResultsSorted.xlsx', engine='xlsxwriter')
 for config in lstConfigs:
     dictAllPredictions = {}
     dictOracles={}
@@ -90,12 +91,14 @@ for config in lstConfigs:
     dfCountCorrect['numOfCorrectPredicts']=lstCountCorrectModels
     dfCountCorrect['label'] = lstLabels
     dfCountCorrect=dfCountCorrect.sort_values(by=['numOfCorrectPredicts'])
-    dfCountCorrect.to_csv(fopResultAllMLApproaches+config+'/statisticAllLabels_all.csv',index=False)
+    # dfCountCorrect.to_csv(fopResultAllMLApproaches+config+'/statisticAllLabels_all.csv',index=False)
     dfPositiveLabels=dfCountCorrect[dfCountCorrect['label']==1]
     dfNegativeLabels = dfCountCorrect[dfCountCorrect['label'] == 0]
-    dfPositiveLabels.to_csv(fopResultAllMLApproaches+config+'/statisticAllLabels_positive.csv',index=False)
-    dfNegativeLabels.to_csv(fopResultAllMLApproaches + config + '/statisticAllLabels_negative.csv', index=False)
-
+    # dfPositiveLabels.to_csv(fopResultAllMLApproaches+config+'/statisticAllLabels_positive.csv',index=False)
+    # dfNegativeLabels.to_csv(fopResultAllMLApproaches + config + '/statisticAllLabels_negative.csv', index=False)
+    dfCountCorrect.to_excel(writerOut,sheet_name='{}_all'.format(config))
+    dfPositiveLabels.to_excel(writerOut, sheet_name='{}_pos'.format(config))
+    dfNegativeLabels.to_excel(writerOut, sheet_name='{}_neg'.format(config))
     for modelName in lstModelNames:
         fopItemModel=fopItemDetails+'/'+modelName+'/'
         createDirIfNotExist(fopItemModel)
@@ -113,19 +116,20 @@ for config in lstConfigs:
         dfTN = dfEachModel[(dfEachModel['predict'] == 0) & (dfEachModel['label'] == 0)].sort_values(by=['numOfCorrectPredicts'])
         dfFP=dfEachModel[(dfEachModel['predict']==1) & (dfEachModel['label']==0)].sort_values(by=['numOfCorrectPredicts'],ascending=False)
         dfFN = dfEachModel[(dfEachModel['predict'] == 0) & (dfEachModel['label'] == 1)].sort_values(by=['numOfCorrectPredicts'],ascending=False)
-        dfTP.to_csv(fopItemModel + 'TP.csv', index=False)
-        dfTN.to_csv(fopItemModel + 'TN.csv', index=False)
-        dfFP.to_csv(fopItemModel + 'FP.csv', index=False)
-        dfFN.to_csv(fopItemModel + 'FN.csv', index=False)
+        # dfTP.to_csv(fopItemModel + 'TP.csv', index=False)
+        # dfTN.to_csv(fopItemModel + 'TN.csv', index=False)
+        # dfFP.to_csv(fopItemModel + 'FP.csv', index=False)
+        # dfFN.to_csv(fopItemModel + 'FN.csv', index=False)
         createDirIfNotExist(fopResultAllMLApproaches+'excel/'+config+'/')
         writer = pd.ExcelWriter(fopResultAllMLApproaches+'excel/'+config+'/'+modelName+'.xlsx', engine='xlsxwriter')
-        dfTP.to_excel(writer, sheet_name='True Positive')
-        dfFP.to_excel(writer, sheet_name='False Positive')
-        dfTN.to_excel(writer, sheet_name='True Negative')
-        dfFN.to_excel(writer, sheet_name='False Negative')
-        dfEachModel.to_excel(writer, sheet_name='all')
+        dfEachModel.to_excel(writer, sheet_name='{}_all'.format(config))
+        dfTP.to_excel(writer, sheet_name='{}_TP'.format(config))
+        dfFP.to_excel(writer, sheet_name='{}_FP'.format(config))
+        dfTN.to_excel(writer, sheet_name='{}_TN'.format(config))
+        dfFN.to_excel(writer, sheet_name='{}_FN'.format(config))
         writer.save()
 
+writerOut.save()
 
 
 
