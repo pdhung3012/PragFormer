@@ -100,16 +100,16 @@ for config in lstConfigs:
         for key2 in dictOracles.keys():
             # print('{} {} {}'.format(len(dictKeyModel.keys()),keyModel, key2))
             lstValueColumn.append(dictKeyModel[key2])
-        strMetric='"{}",{},{},{},{}'.format(keyModel,accuracy_score(lstOracles,lstValueColumn),accuracy_score(lstOracles,lstValueColumn),precision_score(lstOracles,lstValueColumn),recall_score(lstOracles,lstValueColumn),f1_score(lstOracles,lstValueColumn))
+        strMetric='"{}",{},{},{},{}'.format(keyModel,accuracy_score(lstOracles,lstValueColumn),precision_score(lstOracles,lstValueColumn),recall_score(lstOracles,lstValueColumn),f1_score(lstOracles,lstValueColumn))
         lstStrAccuracy.append(strMetric)
         dfAllResults[keyModel]=lstValueColumn
     dfAllResults.to_csv(fpItemOverallPrediction,index=False)
     f1=open(fpItemOverallStatistics.replace('.xlsx','.csv'),'w')
     f1.write('\n'.join(lstStrAccuracy))
     f1.close()
-    pdItemStat=pd.read_csv(fpItemOverallStatistics.replace('.xlsx','.csv'))
-
-    dfAllResults.to_excel(writer, sheet_name='{}'.format(config))
+    dfItemStat=pd.read_csv(fpItemOverallStatistics.replace('.xlsx','.csv'))
+    dfItemStat=dfItemStat.sort_values(by=['Accuracy'],ascending=False)
+    dfItemStat.to_excel(writer, sheet_name='{}'.format(config),index=False)
 writer.save()
 
 
